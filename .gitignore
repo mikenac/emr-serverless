@@ -257,4 +257,6 @@ terraform.rc
 # Ignore code-workspaces
 *.code-workspace
 
+config.json
+
 # End of https://www.toptal.com/developers/gitignore/api/terraform,macos,python,visualstudiocode
