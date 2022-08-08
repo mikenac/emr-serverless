@@ -44,6 +44,7 @@ class EmrServerlessJobRunner():
     def run_job(self, jobName: str, entryPoint: str,
                 className: str, configurationEntries: Mapping[str, str],
                 logPath: str,
+                timeoutMinutes: int = 90,
                 jobArguments: Iterable[str]=[]) ->Tuple[str, str]:
         """ Starts a job and returns the job identifier for status monitoring - non blocking . Returns:
         Tuple(application_id, job_run_id)
@@ -54,6 +55,7 @@ class EmrServerlessJobRunner():
         result = self.client.start_job_run(
             applicationId=self.appication_id,
             executionRoleArn=self.execution_arn,
+            executionTimeoutMinutes=timeoutMinutes,
             jobDriver={
                 'sparkSubmit': {
                     'entryPoint': entryPoint,
@@ -122,6 +124,7 @@ if __name__=="__main__":
     JOB_CLASS = "com.teletracking.dataplatform.samples.SampleJob"
     OUTPUT_DIR = "s3://dp-emr-serverless/output/tables/foobar"
     LOG_BUCKET = "s3://dp-emr-serverless/output/logs"
+    TIMEOUT_MINUTES = 60
 
     JOB_ARGUMENTS = [ OUTPUT_DIR ]
 
@@ -129,6 +132,7 @@ if __name__=="__main__":
     (_, job_run_id) = job_runner.run_job(jobName="test job",
                                 entryPoint=JOB_ENTRY_POINT, className=JOB_CLASS,
                                 logPath=LOG_BUCKET,
+                                timeoutMinutes=TIMEOUT_MINUTES,
                                 configurationEntries=JOB_CONFIG, jobArguments=JOB_ARGUMENTS)
     print (f"Job submitted with job_id: {job_run_id}")
     (job_state, details) = job_runner.wait_for_job_completion(application_id=APPLICATION_ID, job_run_id=job_run_id)
