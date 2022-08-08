@@ -42,12 +42,24 @@ class EmrServerlessJobRunner():
     
 
     def run_job(self, jobName: str, entryPoint: str,
-                className: str, configurationEntries: Mapping[str, str],
+                className: str,
+                configurationEntries: Mapping[str, str],
                 logPath: str,
                 timeoutMinutes: int = 90,
                 jobArguments: Iterable[str]=[]) ->Tuple[str, str]:
-        """ Starts a job and returns the job identifier for status monitoring - non blocking . Returns:
-        Tuple(application_id, job_run_id)
+        """ Starts a job and returns the job identifier for status monitoring - non blocking.
+
+            Parameters:
+                jobName (str): the name you want to give the job
+                entryPoint (str): the job jar file or python script
+                className (str): the full class name for the job entry point
+                configurationEntries (map[str,str]): K,V pair of spark configuation items to pass to the job. Same as the -conf in Spark Submit.
+                logPath (str): the S3 URI for job logging
+                timeoutMinutes (int): the max runtime for the job before EMR kills it.
+                jobArguments (str[]): a list of arguments to pass to the job
+
+            Returns:
+                Tuple(application_id, job_run_id)
         """
 
         sparkParamString = EmrServerlessJobRunner.__spark_conf_from_dict(configEntries=configurationEntries)
