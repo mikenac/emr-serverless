@@ -1,3 +1,4 @@
+from distutils.log import Log
 from typing import Iterable, Mapping, Optional, Tuple
 from time import sleep
 import json
@@ -42,6 +43,7 @@ class EmrServerlessJobRunner():
 
     def run_job(self, jobName: str, entryPoint: str,
                 className: str, configurationEntries: Mapping[str, str],
+                logPath: str,
                 jobArguments: Iterable[str]=[]) ->Tuple[str, str]:
         """ Starts a job and returns the job identifier for status monitoring - non blocking . Returns:
         Tuple(application_id, job_run_id)
@@ -57,6 +59,13 @@ class EmrServerlessJobRunner():
                     'entryPoint': entryPoint,
                     'entryPointArguments': jobArguments,
                     'sparkSubmitParameters': f"--class {className}{sparkParamString}"
+                }
+            },
+            configurationOverrides={
+                'monitoringConfiguration': {
+                    's3MonitoringConfiguration': {
+                        'logUri': logPath
+                    }
                 }
             },
             name=jobName
@@ -112,11 +121,14 @@ if __name__=="__main__":
     JOB_ENTRY_POINT = "s3://dp-emr-serverless/scripts/spark_serverless-assembly-0.1.0-SNAPSHOT.jar"
     JOB_CLASS = "com.teletracking.dataplatform.samples.SampleJob"
     OUTPUT_DIR = "s3://dp-emr-serverless/output/tables/foobar"
+    LOG_BUCKET = "s3://dp-emr-serverless/output/logs"
+
     JOB_ARGUMENTS = [ OUTPUT_DIR ]
 
     job_runner = EmrServerlessJobRunner(APPLICATION_ID, EXECUTION_ARN)
     (_, job_run_id) = job_runner.run_job(jobName="test job",
-                                entryPoint=JOB_ENTRY_POINT, className=JOB_CLASS, 
+                                entryPoint=JOB_ENTRY_POINT, className=JOB_CLASS,
+                                logPath=LOG_BUCKET,
                                 configurationEntries=JOB_CONFIG, jobArguments=JOB_ARGUMENTS)
     print (f"Job submitted with job_id: {job_run_id}")
     (job_state, details) = job_runner.wait_for_job_completion(application_id=APPLICATION_ID, job_run_id=job_run_id)
